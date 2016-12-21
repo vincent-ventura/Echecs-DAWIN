@@ -5,17 +5,19 @@
  */
 
 #include <iostream>
+#include <assert.h>
+
 // A besoin de la declaration de la classe
 #include "Echiquier.h"
 
-using namespace std;
-
 /**
- * Constructeur par d�faut.
- * Initialise � vide l'echiquier.
+ * Constructeur par défaut.
+ * Initialise à vide l'echiquier.
  */
 Echiquier::Echiquier()
 {
+  for (int i=0;i<64;i++)
+    m_cases[i] = nullptr;
 }
 
 
@@ -31,6 +33,10 @@ Echiquier::Echiquier()
 Piece* 
 Echiquier::getPiece( int x, int y )
 {
+  //assert(x<9 && x>0 && y<9 && y>0);
+  if( x<9 && x>0 && y<9 && y>0 )
+    return m_cases[(x-1)+8*(y-1)];  
+  return nullptr;
 }
 
   
@@ -45,6 +51,15 @@ Echiquier::getPiece( int x, int y )
 bool 
 Echiquier::placer( Piece* p )
 {
+  assert(p->x()<9 && p->x()>0 && p->y()<9 && p->y()>0);
+  if ( getPiece(p->x(),p->y())==nullptr && p!=nullptr )
+  {
+      m_cases[(p->x()-1)+8*((*p).y()-1)] = p;
+      p->setOnBoard(true);
+      return true;
+  }
+  else
+    return false;
 }
 
 
@@ -61,8 +76,73 @@ Echiquier::placer( Piece* p )
  * presente au bon endroit sur l'echiquier)
  */
 bool 
-Echiquier::deplacer( Piece* p, int x, int y )
+Echiquier::deplacer( Piece* p, int x, int y, vector<string> & deplacement )
 {
+  if ( p->mouvementValide( (*this), x, y ) ) { // si le mouvement est valide
+    deplacement.push_back( to_string(p->x()) );
+    deplacement.push_back( to_string(p->y()) );
+    deplacement.push_back( to_string(x) );
+    deplacement.push_back( to_string(y) );
+
+    Piece * autre = getPiece(x, y);
+
+    if ( autre != nullptr ) { // si une piece est au point de destination (forcément de couleur adverse)
+      deplacement.push_back("true");
+      deplacement.push_back( to_string(autre->myChar()) );
+      enleverPiece(x, y); // on l'enleve
+      autre->setOnBoard(false);
+    }
+    else
+      deplacement.push_back("false");
+
+    enleverPiece( p->x(), p->y() ); // on enleve la piece que l'on veut déplacer
+    p->move(x, y); // on change ses coordonnées
+    placer(p); // on la replace
+    return true;
+  }
+
+  return false;    
+}
+
+/**
+ * Annule le dernier déplacement effectué
+ * sur l'échiquier
+ */
+void
+Echiquier::annulerDeplacement( vector<string> deplacement, Joueur & adversaire )
+{
+  int xDep, yDep, xFin, yFin;
+  bool wasAPieceDeleted;
+  char car;
+
+  vector<string>::iterator it = deplacement.begin();
+
+  // On récupère les infos du deplacement à annuler
+  xDep = stoi(*it); // x initial de la piece deplacée
+  *it++; 
+  yDep = stoi(*it); // y initial de la piece deplacée
+  *it++;
+  xFin = stoi(*it); // x final de la piece deplacée
+  *it++;
+  yFin = stoi(*it); // y final de la piece deplacée
+  *it++;
+  wasAPieceDeleted = *it == "true" ? true : false; // indicateur à vrai si une piece avait été mangée    
+  *it++;
+
+  // on replace la piece qui avait ete deplace
+  Piece * p;
+  p = getPiece(xFin, yFin); // on recupere la piece ayant été deplace
+  enleverPiece(xFin, yFin); // on l'enleve de l'echiquier
+  p->move(xDep, yDep); // on change ses coordonnees
+  placer(p); // on la replace sur l'echiquier
+
+  // on replace la piece qui avait ete mangée s'il y en avait une
+  if( wasAPieceDeleted ) {
+    car = stoi(*it);
+    Piece * pOld = adversaire.getPiece(xFin, yFin, car, false);
+    placer( pOld );
+  }
+
 }
 
 
@@ -78,6 +158,11 @@ Echiquier::deplacer( Piece* p, int x, int y )
 Piece* 
 Echiquier::enleverPiece( int x, int y )
 {
+  Piece *tmp;
+  tmp=m_cases[(x-1)+8*(y-1)];
+  tmp->setOnBoard(false);
+  m_cases[(x-1)+8*(y-1)]=nullptr;
+  return tmp;
 }
 
 
@@ -89,23 +174,23 @@ Echiquier::enleverPiece( int x, int y )
 void
 Echiquier::affiche()
 {
-  cout << endl << "  12345678" << endl;
+  cout << endl << "   1 2 3 4 5 6 7 8" << endl << endl;
   for ( int y = 1; y <= 8; ++y )
     {
-      cout << y << " ";
+      cout << y << "  ";
       for ( int x = 1; x <= 8; ++x )
 	{
 	  char c;
 	  Piece* p = getPiece( x, y );
-	  if ( p == 0 ) 
+	  if ( p == nullptr ) 
 	    c = ( ( x + y ) % 2 ) == 0 ? '#' : '.';
 	  else
-	    c = p->isWhite() ? 'B' : 'N';
-	  cout << c;
+	    c = p->myChar(); // p->isWhite() ? 'B' : 'N';
+	  cout << c << " ";
 	}
       cout << " " << y << endl;
     }
-  cout << "  12345678" << endl;
+  cout << endl << "   1 2 3 4 5 6 7 8" << endl;
 }
 
   

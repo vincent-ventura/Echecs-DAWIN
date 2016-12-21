@@ -7,23 +7,27 @@
 // A besoin de la declaration de la classe
 #include <iostream>
 #include "Piece.h"
+#include <stdlib.h>     /* abs */
 
 using namespace std;
 
 Piece::Piece()
 {
   // ne fait rien => objet instancie mais non valide.
-  cout << "Une piece creee" << endl;
+  //cout << "Constructeur Piece par defaut" << endl;
 }
 
-Piece::Piece(const Piece & p)
+Piece::Piece(const Piece & autre)
 {
-  cout << "Une piece creee par copie" << endl;
+  m_x = autre.x();
+  m_y = autre.y();
+  m_white = autre.isWhite();
+  //cout << "Constructeur Piece par copie" << endl;
 }
 
 Piece::~Piece()
 {
-  cout << "Une piece detruite" << endl;
+  //cout << "Destructeur Piece " << endl;
 }
 
 Piece::Piece( int x, int y, bool white )
@@ -31,7 +35,19 @@ Piece::Piece( int x, int y, bool white )
   m_x = x;
   m_y = y;
   m_white = white;
-  cout << "Une piece creee" << endl;
+  m_on_board = false;
+  //cout << "Constructeur Piece specialisee" << endl;
+}
+
+Piece &
+Piece::operator=(const Piece & autre)
+{
+  m_x = autre.x();
+  m_y = autre.y();
+  m_white = autre.isWhite();
+  m_on_board = autre.getOnBoard();
+  //cout << "Operateur d'affectation Piece" << endl;
+  return *this;
 }
 
 void
@@ -77,12 +93,45 @@ void
 Piece::affiche() const
 {
   cout << "Piece: x=" << m_x << " y=" << m_y << " "
-       << ( m_white ? "blanche" : "noire" ) << endl;
+       << ( m_white ? "blanche" : "noire" ) << " "
+       << ( m_on_board ? "enJeu" : "prise" ) << endl;
 }
 
 bool
-Piece::samePosition(Piece p2) const
+Piece::samePosition(const Piece & p2) const
 {
   return ( m_x==p2.x() && m_y==p2.y() );
 }
 
+const Piece & 
+Piece::plusforte(const Piece & autre) const
+{
+  if (true)
+    return autre;
+  else
+    return *this;
+}
+
+bool 
+Piece::mouvementValide(Echiquier &e, int x, int y)
+{
+  return false;
+}
+
+char
+Piece::myChar()
+{
+  return (m_white ? 'B' : 'N');
+}
+
+bool
+Piece::getOnBoard() const
+{
+  return m_on_board;
+}
+
+void
+Piece::setOnBoard(bool onBoard)
+{
+  m_on_board = onBoard;
+}

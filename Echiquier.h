@@ -4,10 +4,18 @@
  * @file Echiquier.h
  */
 
-#if !defined Echiquier_h
+#ifndef Echiquier_h
 #define Echiquier_h
 
+#include <array>
 #include "Piece.h"
+#include "Joueur.h"
+#include <vector>
+
+using namespace std;
+
+class Piece;
+class Joueur;
 
 /**
  * Declaration d'une classe modélisant une piece de jeu d'echec.
@@ -18,8 +26,9 @@ private:
   /**
    * Les cases de l'echiquier
    */
-  Piece* m_cases[ 64 ];
-  
+  // Piece* m_cases[ 64 ];
+  array<Piece*,64> m_cases;
+
 public:
 
   /**
@@ -61,7 +70,14 @@ public:
    * (case occupee, coordonnees invalides, piece vide, piece pas
    * presente au bon endroit sur l'echiquier)
    */
-  bool deplacer( Piece* p, int x, int y );
+  bool deplacer( Piece* p, int x, int y, vector<string> & deplacement);
+
+
+  /**
+   * Annule le dernier déplacement effectué
+   * sur l'échiquier
+   */
+  void annulerDeplacement( vector<string> deplacement, Joueur & j );
 
   /**
    * Enleve la piece situee sur une case (qui devient vide).
